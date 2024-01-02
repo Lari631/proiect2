@@ -1,0 +1,303 @@
+#include<stdio.h>
+#include<string.h>
+#include <stdlib.h>
+struct transaction
+{
+        struct date
+        {
+                int day,month,year;
+        }date;
+        int type; //0 for income, 1 for expense
+        int amount;
+        char description[50];
+
+}; // struct of transactions, to keep data about each transaction
+   // the structue is declared globally so that it can be used in every function easily
+struct transaction t[50];
+
+int account_balance(int i) // function returns account balance
+{
+        int s=0; // s = sum of money in the account
+        int j;
+        for(j=0;j<=i;j++)
+        {
+                if(t[j].type==0)
+                        s=s+t[j].amount; // income
+                else s=s-t[j].amount; // expense
+        }
+        return s;
+}
+
+int year_validation(int i) // function to test if given year is valid
+{
+        if(t[i].date.year>2023 ||  t[i].date.year<2000)
+                return 0;
+        return 1;
+
+}
+int month_validation(int i) // function to test if given month is valid
+{
+
+       if(t[i].date.month<1 || t[i].date.month>12)
+                return 0;
+
+       return 1;
+
+}
+int day_validation(int i) // function to test if given day is valid
+{
+        if(t[i].date.day>31 ||  t[i].date.day<1) // no month has more than 31 days
+                return 0;
+        if(t[i].date.month==4 || t[i].date.month==6 || t[i].date.month==9 || t[i].date.month==11) //months with 30 days
+                if(t[i].date.day==31)
+                        return 0;
+        if(t[i].date.month==2) // february
+        {       if(t[i].date.year%4==0) // an bisect, 29 de zile
+                {       if(t[i].date.day>29)
+                                return 0;
+                }
+                else if(t[i].date.day>28)
+                                return 0;
+        }
+        return 1;
+}
+
+int type_validation(int i)  // function to test if given type is valid ( 0 or 1 )
+{
+
+        if(t[i].type!=0 && t[i].type!=1)
+                return 0;
+        return 1;
+}
+void amount_validation(int i) // function to test if the expense can be made
+{
+        if(account_balance(i)<0) // if new account balance would be negative, it means the expense is too big
+        {
+                printf("Not enough money \n");
+                exit(0);
+                //return 0;
+        }
+        //return 1;
+}
+
+void new_transaction(int i) // function for adding a new transaction to the struct of transactions; data input fot each field
+{
+        printf("Date: \n");
+         do
+         {
+         printf("Year: \n");
+         scanf("%d",&t[i].date.year);
+         if (year_validation(i)==0)
+                 printf("Invalid year!\n");
+         }while (year_validation(i)==0);    //validate each type of data to avoid program crashing
+
+        do
+        {
+         printf("Month: \n");
+         scanf("%d",&t[i].date.month);
+         if (month_validation(i)==0)
+                 printf("Invalid month!\n");
+        }while (month_validation(i)==0);
+
+         do
+         {
+         printf("Day: \n");
+         scanf("%d",&t[i].date.day);
+         if (day_validation(i)==0)
+                 printf("Invalid day!\n");
+        }while (day_validation(i)==0);
+         do
+         {
+         printf("Transaction type (0 for income, 1 for expenses): \n");
+         scanf("%d",&t[i].type);
+         if (type_validation(i)==0)
+                 printf("Invalid type!\n");
+        }while (type_validation(i)==0);
+
+
+         printf("Amount: \n");
+         scanf("%d",&t[i].amount);
+         if(t[i].type==1) // if type = expense, test if there are enough money to perfom the transaction
+                amount_validation(i);
+
+         printf("Description: \n");
+         scanf("%s",t[i].description);
+}
+void display_transactions(int i) // function to display all the recorded transactions;
+                                 // the function takes the number of transactions recorded as parameter
+{
+        int j;
+        for(j=0;j<=i;j++)
+        {
+        printf("Transaction %d: ",j);
+        printf("\n");
+        printf("Date: ");
+        printf("%d",t[j].date.day);
+        printf("/");
+        printf("%d",t[j].date.month);
+        printf("/");
+        printf("%d",t[j].date.year);
+        printf("\n");
+        printf("Type: ");
+          if(t[j].type==0)
+                  printf("income");
+          else printf("expense");
+        printf("\n");
+        printf("Amount: ");
+        printf("%d",t[j].amount);
+        printf("\n");
+        printf("Description: ");
+        printf("%s",t[j].description);
+        printf("\n");
+        }
+}
+void display_transaction(int j) // function to display one transaction
+                                // j = number of the transaction
+{
+        printf("Transaction %d: ",j);
+        printf("\n");
+        printf("Date: ");
+        printf("%d",t[j].date.day);
+        printf("/");
+        printf("%d",t[j].date.month);
+        printf("/");
+        printf("%d",t[j].date.year);
+        printf("\n");
+        printf("Type: ");
+          if(t[j].type==0)
+                  printf("income");
+          else printf("expense");
+        printf("\n");
+        printf("Amount: ");
+        printf("%d",t[j].amount);
+        printf("\n");
+        printf("Description: ");
+        printf("%s",t[j].description);
+        printf("\n");
+}
+int test_date(int d1, int m1, int y1, int d2, int m2, int y2, int i) // tests if the date of transaction nr i is within given time limit fot financial report
+{
+        if(t[i].date.year<y1 || t[i].date.year>y2)
+                return 0;
+        if(t[i].date.year==y1)
+        {       if(t[i].date.month<m1)
+                        return 0;
+                if(t[i].date.month==m1)
+                        if(t[i].date.day<d1)
+                                return 0;
+        }
+        else if(t[i].date.year==y2)
+        {
+                if(t[i].date.month>m2)
+                        return 0;
+                if(t[i].date.month==m2)
+                        if(t[i].date.day>d2)
+                                return 0;
+        }
+        return 1;
+}
+void financial_report(int d1, int m1, int y1, int d2, int m2, int y2) // the function prints financial report for given time period
+{
+        int i,ok=0; // ok tests if any transactions were made during given period
+        for(i=0;i<=50;i++)
+                if(test_date(d1,m1,y1,d2,m2,y2,i)==1) // test every transaction to see if it is in the selected time period
+                {       display_transaction(i);
+                        ok=1; // at least one transaction was made
+                }
+        if(ok==0)
+                printf("No transactions were made during given period"); // function shows a message if no transacrion were made
+
+}
+int main()
+{
+        int option;
+        int i=-1; // i will be the counter for transaction numbers;
+                  // it is initialized with -1 because it will be incremented for the first transaction, which will be transaction 0
+        do
+        {
+                printf("Menu: \n");
+                printf("1. Record new transaction \n");
+                printf("2. Calculate the account balance \n");
+                printf("3. Display a list of previous transactions \n");
+                printf("4. Generate financial report \n"); // = a summary of income and expenses for a specific period
+
+                printf("0. Exit \n");
+                printf("Enter one option: ");
+                scanf("%d", &option);
+
+                switch(option)
+                {
+                        case 1:
+                        {
+                                i++;
+                                printf("Transaction %d: ",i);
+                                printf("\n");
+                                new_transaction(i);
+                                break;
+                        }
+                        case 2:
+                        {
+                                int s=account_balance(i);
+                                printf("Your account balance is: %d ",s);
+                                printf("\n");
+                                break;
+                        }
+                        case 3:
+                        {
+                                display_transactions(i);
+                                break;
+                        }
+                        case 4:
+                        {
+                                int d1,m1,y1,d2,m2,y2; //variables to determine time period
+                                printf("Set time period for generating financial report\n");
+
+                                printf("Set beginning date: \n");
+                                printf("Year: ");
+                                scanf("%d",&y1);
+                                printf("\n");
+                                year_validation(i); // each input data is validated
+
+                                printf("Month: ");
+                                scanf("%d",&m1);
+                                printf("\n");
+                                month_validation(i);
+
+                                printf("Day: ");
+                                scanf("%d",&d1);
+                                printf("\n");
+                                day_validation(i);
+
+                                printf("Set final date: \n");
+                                printf("Year: ");
+                                scanf("%d",&y2);
+                                printf("\n");
+                                year_validation(i);
+
+                                printf("Month: ");
+                                scanf("%d",&m2);
+                                printf("\n");
+                                month_validation(i);
+
+                                printf("Day: ");
+                                scanf("%d",&d2);
+                                printf("\n");
+                                day_validation(i);
+
+                                financial_report(d1,m1,y1,d2,m2,y2);
+                                break;
+
+                        }
+                        case 0:
+                        {
+                                printf("Exiting program\n");
+                                break;
+                        }
+                        default:
+                                printf("Invalid option");
+                }
+        }while(option);
+        return 0;
+}
+
+
