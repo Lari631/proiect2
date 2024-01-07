@@ -7,14 +7,35 @@ struct transaction
         {
                 int day,month,year;
         }date;
-        int type; //0 for income, 1 for expense
-        int amount;
+        int id_account,transfer_account,id_transaction,amount;
+        int type; //1 for income, 2 for expense, 3 for transaction
         char description[50];
 
 }; // struct of transactions, to keep data about each transaction
    // the structue is declared globally so that it can be used in every function easily
-struct transaction t[50];
+struct transaction t[200];
 
+int number_of_transactions = 0;
+
+struct user
+{
+        int id_user; // 3 digit number
+        int pass; // password = 4 digit code
+};
+struct user u[50];
+
+int number_of_users = 0;
+
+struct account
+{
+        int id_account;
+        int id_user;
+        int type; // 1 = credit account, 2 = savings account
+        int sum; // account balance
+};
+struct account a[100];
+
+int number_of_accounts = 0;
 int account_balance(int i) // function returns account balance
 {
         int s=0; // s = sum of money in the account
@@ -30,7 +51,7 @@ int account_balance(int i) // function returns account balance
 
 int year_validation(int i) // function to test if given year is valid
 {
-        if(t[i].date.year>2023 ||  t[i].date.year<2000)
+        if(t[i].date.year>2024 ||  t[i].date.year<2000)
                 return 0;
         return 1;
 
@@ -53,7 +74,7 @@ int day_validation(int i) // function to test if given day is valid
                         return 0;
         if(t[i].date.month==2) // february
         {       if(t[i].date.year%4==0) // an bisect, 29 de zile
-                {       if(t[i].date.day>29)
+ {       if(t[i].date.day>29)
                                 return 0;
                 }
                 else if(t[i].date.day>28)
@@ -90,8 +111,7 @@ void new_transaction(int i) // function for adding a new transaction to the stru
          if (year_validation(i)==0)
                  printf("Invalid year!\n");
          }while (year_validation(i)==0);    //validate each type of data to avoid program crashing
-
-        do
+                                          do
         {
          printf("Month: \n");
          scanf("%d",&t[i].date.month);
@@ -123,58 +143,6 @@ void new_transaction(int i) // function for adding a new transaction to the stru
          printf("Description: \n");
          scanf("%s",t[i].description);
 }
-void display_transactions(int i) // function to display all the recorded transactions;
-                                 // the function takes the number of transactions recorded as parameter
-{
-        int j;
-        for(j=0;j<=i;j++)
-        {
-        printf("Transaction %d: ",j);
-        printf("\n");
-        printf("Date: ");
-        printf("%d",t[j].date.day);
-        printf("/");
-        printf("%d",t[j].date.month);
-        printf("/");
-        printf("%d",t[j].date.year);
-        printf("\n");
-        printf("Type: ");
-          if(t[j].type==0)
-                  printf("income");
-          else printf("expense");
-        printf("\n");
-        printf("Amount: ");
-        printf("%d",t[j].amount);
-        printf("\n");
-        printf("Description: ");
-        printf("%s",t[j].description);
-        printf("\n");
-        }
-}
-void display_transaction(int j) // function to display one transaction
-                                // j = number of the transaction
-{
-        printf("Transaction %d: ",j);
-        printf("\n");
-        printf("Date: ");
-        printf("%d",t[j].date.day);
-        printf("/");
-        printf("%d",t[j].date.month);
-        printf("/");
-        printf("%d",t[j].date.year);
-        printf("\n");
-        printf("Type: ");
-          if(t[j].type==0)
-                  printf("income");
-          else printf("expense");
-        printf("\n");
-        printf("Amount: ");
-        printf("%d",t[j].amount);
-        printf("\n");
-        printf("Description: ");
-        printf("%s",t[j].description);
-        printf("\n");
-}
 int test_date(int d1, int m1, int y1, int d2, int m2, int y2, int i) // tests if the date of transaction nr i is within given time limit fot financial report
 {
         if(t[i].date.year<y1 || t[i].date.year>y2)
@@ -201,26 +169,534 @@ void financial_report(int d1, int m1, int y1, int d2, int m2, int y2) // the fun
         int i,ok=0; // ok tests if any transactions were made during given period
         for(i=0;i<=50;i++)
                 if(test_date(d1,m1,y1,d2,m2,y2,i)==1) // test every transaction to see if it is in the selected time period
-                {       display_transaction(i);
+                {       //display_transaction(i); trebe replace-uit
                         ok=1; // at least one transaction was made
                 }
         if(ok==0)
                 printf("No transactions were made during given period"); // function shows a message if no transacrion were made
 
 }
+void load_accounts_from_file() // function reads data about clients' accounts from file and builds the struct which will be later used in program
+{
+        FILE *file_accounts;
+        char line[200];
+        char *p;
+        int n=0,k=0,l=0;
+        file_accounts = fopen("date/accounts.csv","r");
+        if(file_accounts == NULL)
+        { printf("Not able to open file");
+          exit(0);
+        }
+        else
+        {
+                //fgets(line,200,file_accunts);
+                while(fgets(line,200,file_accounts))
+                {
+                        l++;
+                        if (l!=1) // first line should not be taken into consideration
+                        {
+                                n=0;
+                                k++;
+                                p=strtok(line,",");
+                                while(p)
+                                {
+                                        n++;
+                                        if (n==1)
+                                                a[k].id_account=atoi(p); // convert string into int
+                                        else if (n==2)
+                                                a[k].id_user=atoi(p);
+                                        else if (n==3)
+                                                a[k].type=atoi(p);
+                                        else a[k].sum=atoi(p);
+                                        p=strtok(NULL,",");
+                                }
+                        }
+                }
+        }
+        number_of_accounts=k;
+}
+ void print_accounts()
+{
+        int i=1;
+        for (i=1;i<=number_of_accounts;i++)
+        {
+                printf("id_account: ");
+                printf("%d  ",a[i].id_account);
+                printf("id_user: %d  ",a[i].id_user);
+                printf("type: ");
+                if (a[i].type==1) printf("credit  ");
+                else printf("savings  ");
+                printf("amount: %d\n",a[i].sum);
+        }
+}
+void load_transactions_from_file() // function reads data about clients from file and builds the struct which will be later used in program
+{
+        FILE *file_transactions;
+        char line[200];
+        char *p;
+        int n=0,k=0,l=0;
+        file_transactions = fopen("date/transactions.csv","r");
+        if(file_transactions == NULL)
+        { printf("Not able to open file");
+          exit(0);
+        }
+        else
+        {
+                while(fgets(line,200,file_transactions))
+                {
+                        l++;
+                        if (l!=1) // first line should not be taken into consideration
+                        {
+                                n=0;
+                                k++;
+                                p=strtok(line,",");
+                                while(p)
+                                {
+                                        n++;
+                            if (n==1)
+                                                t[k].id_transaction=atoi(p); // convert string into int
+                                        else if(n==2) t[k].id_account=atoi(p);
+                                        else if (n=3)
+                                        {
+                                                char *string=p;
+                                                int c=0;
+                                                char *m; // date format is dd/mm/yyyy
+                                                m=strtok(string,"/");
+                                                while(m)
+                                                {
+                                                        c++;
+                                                        if(c==1) t[k].date.day= atoi(m);
+                                                        else if (c==2) t[k].date.month = atoi(m);
+                                                        else t[k].date.year= atoi(m);
+                                                        m = strtok(NULL,"/");
+                                                }
+                                        }
+                                        else if (n==4) t[k].type=atoi(p);
+                                        else if(n==5) t[k].amount = atoi(p);
+                                        else t[k].transfer_account = atoi(p);
+                                        p=strtok(NULL,",");
+                                }
+                        }
+                }
+        }
+        number_of_transactions=k;
+}
+void print_transactions()
+{
+        int i=1;
+        for (i=1;i<=number_of_transactions;i++)
+        {
+                printf("id_transaction: %d  ",t[i].id_transaction);
+                printf("id_account: %d  ",t[i].id_account);
+                printf("date: %d/%d/%d  ",t[i].date.day,t[i].date.month,t[i].date.year);
+                printf("type: ");
+                if (t[i].type==1) printf("income  ");
+                else if (t[i].type==2) printf("expense  ");
+                else printf("transfer to %d  ",t[i].transfer_account);
+                printf("amount: %d\n",t[i].amount);
+        }
+}
+void append_transaction_to_file(char id_transaction[10],char id_account[10],char day[10],char month[10], char year[10],char type,char amount[10],char other_account[10])
+{
+         FILE *file_transactions;
+         char text[100];
+         file_transactions = fopen("date/transactions.csv","a");
+         if (file_transactions == NULL)
+                printf("Unable to open the file.\n");
+         else
+         {
+                 strcpy(text,id_transaction);
+                 strcat(text,",");
+                 strcat(text,id_account);
+                 strcat(text,",");
+                 strcat(text,day);
+                 strcat(text,"/");
+                 strcat(text,month);
+                 strcat(text,"/");
+                 strcat(text,year);
+                 strcat(text,",");
+                 int len = strlen(text);
+                 text[len]=type;
+                 text[len+1]='\0';
+                 //strcat(text,type);
+                 strcat(text,",");
+                 strcat(text,amount);
+                 strcat(text,",");
+                 strcat(text,other_account);
+                 strcat(text,"\n");
+                 fprintf(file_transactions,"%s",text);
+                 printf("Transaction ended successfully!\n");
+         }
+}
+void append_transaction_to_struct(int id_transaction, int id_account, int day,int month, int year,int type,int amount, int transfer_account)
+{
+        number_of_transactions++;
+        t[number_of_transactions].id_transaction = id_transaction;
+        t[number_of_transactions].id_account = id_account;
+        t[number_of_transactions].date.day = day;
+        t[number_of_transactions].date.month = month;
+        t[number_of_transactions].date.year = year;
+        t[number_of_transactions].type = type;
+        t[number_of_transactions].amount = amount;
+        t[number_of_transactions].transfer_account = transfer_account;
+}
+void load_users_from_file() // function reads data about clients from file and builds the struct which will be later used in program
+{
+        FILE *file_users;
+        char line[20];
+        char *p;
+        int n=0,k=0,l=0;
+        file_users = fopen("date/users.csv","r");
+        if(file_users == NULL)
+        { printf("Not able to open file");
+          exit(0);
+        }
+        else
+        {
+                fgets(line,20,file_users);
+                while(fgets(line,10,file_users))
+                {
+                                n=0;
+                                k++;
+                                p=strtok(line,",");
+                                while(p)
+                                {
+                                        n++;
+                                        if (n==1)
+                                                u[k].id_user=atoi(p); // convert string into int
+                                        else u[k].pass=atoi(p);
+                                        p=strtok(NULL,",");
+                                }
+                }
+        }
+        number_of_users=k;
+}
+void print_users()
+{
+        int i=1;
+        for (i=1;i<=number_of_users;i++)
+        {
+                printf("username: ");
+                printf("%d  ",u[i].id_user);
+                printf("pass: ");
+                printf("%d \n",u[i].pass);
+        }
+}
+void append_user_to_file(char id_user[10], char pass[10])
+{
+         FILE *file_users;
+         char text[20];
+         file_users = fopen("date/users.csv","a");
+         if (file_users == NULL)
+                printf("Unable to open the file.\n");
+         else
+         {
+                 strcpy(text,id_user);
+                 strcat(text,",");
+                 strcat(text,pass);
+                 strcat(text,"\n");
+                 fprintf(file_users,"%s",text);
+                 printf("User account created successfully!\n");
+         }
+
+}
+void append_user_to_struct(int id, int pass)
+{
+        number_of_users++;
+        u[number_of_users].id_user = id;
+        u[number_of_users].pass = pass;
+}
+int check_for_user(int id_user) // function searches for a user based on its id and returns the position in struct of users
+{
+        for(int i=1;i<=number_of_users;i++)
+                if (u[i].id_user == id_user)
+                        return i;
+        return 0;
+}
+int check_for_account(int id) // function searches for account based on id
+{
+        for (int i=1;i<=number_of_accounts;i++)
+                if (a[i].id_account == id)
+                        return i;
+        return 0;
+}
+void append_account_to_file(char id_account[10],char id_user[10],char type,char suma[10])
+{
+         FILE *file_accounts;
+         char text[50];
+         file_accounts = fopen("date/accounts.csv","a");
+         if (file_accounts == NULL)
+                printf("Unable to open the file.\n");
+         else
+         {
+                 strcpy(text,id_account);
+                 strcat(text,",");
+                 strcat(text,id_user);
+                 strcat(text,",");
+                 int len = strlen(text);
+                 text[len]=type;
+                 text[len+1]='\0';
+                 //strcat(text,type);
+                 strcat(text,",");
+                 strcat(text,suma);
+                 strcat(text,"\n");
+                 fprintf(file_accounts,"%s",text);
+                 printf("Banking account created successfully!\n");
+         }
+}
+void append_account_to_struct(int id_account, int id_user,int type, int suma)
+{
+        number_of_accounts++;
+        a[number_of_accounts].id_account = id_account;
+        a[number_of_accounts].id_user = id_user;
+        a[number_of_accounts].type = type;
+        a[number_of_accounts].sum = suma;
+}
+void create_new_account(char string_user[10],char string_type) // function creates new banking account for new user
+{
+        char string_account[10];
+        int id_account,ok=1,type,id_user;
+        while(ok)
+        {
+                id_account = 1000+ rand()%9000; //generate a random 4 digit account id
+                sprintf(string_account, "%d", id_account);
+                ok = check_for_account(id_account);
+        }
+        char string_suma[10] = "0";
+        int suma=0;
+        append_account_to_file(string_account,string_user,string_type,string_suma);//scriu in fisier
+        id_user = atoi(string_user);
+        type = string_type-'0';
+        suma= atoi(string_suma);
+        append_account_to_struct(id_account,id_user,type,suma);//adaug la struct
+}
+int search_for_account(int id_user, int type) // function returns position of account in struct, or 0 if it does not exist
+{
+        for(int i=1;i<=number_of_accounts;i++)
+                if(a[i].id_user == id_user && a[i].type == type)
+                        return i;
+        return 0;
+}
+int search_for_account_by_id(int id_account) // function returns position of account in struct
+{
+        for (int i=1;i<=number_of_accounts;i++)
+                if (a[i].id_account == id_account)
+                        return i;
+        return 0;
+}
+int get_id_account(int i) // function returns id_account by position in struct)
+{
+        return a[i].id_account;
+}
+int search_for_transaction(int id_transaction) // function searches for a transaction based by its id
+                                               // returns the position of the transaction in transaction struct
+{
+        for (int i=1;i<=number_of_transactions;i++)
+                if (id_transaction==t[i].id_transaction)
+                        return i;
+        return 0;
+}
+int generate_transaction_id()
+{
+        int ok=1,id_transaction;
+        while(ok)
+        {
+                id_transaction = 1000+ rand()%9000; //generate a random 4 digit account id
+                ok = search_for_transaction(id_transaction); // if ok!=0, random generated id exists, so we generate another id
+        }
+        return id_transaction;
+}
+int check_amount(int account, int amount) // function checks if withdraw/transfer is possible, based on given account's ballance
+{
+        int i = search_for_account_by_id(account);
+        if (amount<=a[i].sum)
+                return 1; // transaction is possible
+        else return 0; // transaction not possible
+}
+void deposit(int account,int amount) // function that deposits given amount of money in an account
+{
+        int poz=number_of_transactions+1;
+        int i= search_for_account_by_id(account); // a[i]
+        a[i].sum = a[i].sum+amount;
+        //append transaction to file
+        //write_all_accounts_to_file // modify the file with new data for next transactions
+        //modify sum in struct si dupa cumva si in fisier (nasolic)
+        number_of_transactions++;
+}
+void withdraw(int account,int amount) // function that withdraws given amount of money from given account
+{
+        int poz=number_of_transactions+1;
+        int i= search_for_account_by_id(account);
+        a[i].sum=a[i].sum-amount; // amount is akready checked before entering function
+        number_of_transactions++;
+}
+void transfer(int account,int amount,int other_account)
+{
+        int poz=number_of_transactions+1;
+        int i= search_for_account_by_id(account);
+        a[i].sum=a[i].sum-amount;
+        int j = search_for_account_by_id(other_account);
+        a[j].sum=a[j].sum+amount;
+        // append transaction
+        // write all transactions to file
+        number_of_transactions++;
+}
+void create_transaction(int id_account,int transaction_type,int amount)
+{
+        int id_transaction = generate_transaction_id();
+        if (transaction_type==1) // deposit
+                deposit(id_account,amount);
+
+        else if(transaction_type==2) //withdraw
+        {
+                if (check_amount(id_account,amount)==1)
+                        withdraw(id_account,amount);
+                else printf("Not enough money to complete transaction :(\n");
+        }
+        else //transfer
+        {
+                if (check_amount(id_account,amount)==1)
+                {
+                        int other_account;
+                        printf("Enter the account id you want to transfer money to: ");
+                        scanf("%d",&other_account);
+                        transfer(id_account,amount,other_account);
+                }
+                else printf("Not enough money to complete transaction :(\n");
+        }
+}
+void write_all_acounts_to_file() //function writes all acounts to file, after modifying sums because of transactions
+{
+        FILE *file_accounts;
+        char text[200];
+        file_accounts = freopen("date/accounts.csv","w");
+        if(file_accounts == NULL)
+        { printf("Not able to open file");
+          exit(0);
+        }
+        else
+        {
+                for(int i=1;i<=number_of_accounts;i++)
+                {
+                        text={'\0'};
+                        strcpy(text,a[i].id_account);
+                        strcat(text,",");
+                        strcat(text,a[i].id_user);
+                        strcat(text,",");
+                        int len = strlen(text);
+                        text[len]=a[i].type;
+                        text[len+1]='\0';
+                        strcat(text,",");
+                        strcat(text,a[i].sum);
+                        strcat(text,"\n");
+                        fprintf(file_accounts,"%s",text);
+                }
+        }
+}
 int main()
 {
-        int option;
+        int option,id_user,pass;
         int i=-1; // i will be the counter for transaction numbers;
                   // it is initialized with -1 because it will be incremented for the first transaction, which will be transaction 0
+        load_users_from_file();
+        //print_users();
+        load_accounts_from_file();
+        //print_accounts();
+        load_transactions_from_file();
+        //print_transactions();
         do
-        {
+        { 
                 printf("Menu: \n");
+                printf("1. Login\n");
+                printf("2. Create account\n"); // for new users
+                printf("0. Exit\n");
+                printf("Enter one option: ");
+                scanf("%d", &option);
+
+                int id,pass;
+
+                switch(option)
+                {
+                        case 1:
+                        {
+                                int ok=1;
+                                while(ok==1)
+                                {
+                                        printf("Enter user id: ");
+                                        scanf("%d",&id);
+                                        int poz=0; //position of id_user in struct
+                                        poz = check_for_user(id);
+                                        if(poz!=0)
+                                        {
+                                                printf("Enter password: ");
+                                                scanf("%d",&pass);
+                                                if (pass == u[poz].pass)
+ok=0;
+                                                else
+                                                {
+                                                        printf("Incorrect password!\n");
+                                                        ok=1;
+                                                }
+                                        }
+                                        else
+                                        {
+                                                ok=0;
+                                                printf("Given id does not exist! Create an account?\n");
+                                        }
+                                }
+                                break;
+                        }
+                        case 2:
+                        {
+                                int ok=0; // the account is not made
+                                while(ok==0)
+                                {
+                                        char new_id[10],new_pass[10];
+                                        int type, string_type;
+                                        printf("Enter a 3-digit user id: ");
+                                        scanf("%s",new_id); // input read as string, to be put to file
+                                        int id_user = atoi(new_id);
+                                        if (check_for_user(id_user)==0) // the new_id does not already exist in the list
+                                        {
+                                                printf("Enter a 4-digit password: ");
+                                                scanf("%s",new_pass);
+                                                int password = atoi(new_pass);
+                                                printf("Enter banking account type( 1 = credit account, 2 = savings account ): ");
+                                                string_type=getchar();
+                                                string_type=getchar();
+                                                //scanf("%c",string_type);
+                                                create_new_account(new_id,string_type);
+                                                ok=1; // a new user was created and added to the file of users
+                                                      // a new account was created and added to the file of accounts
+                                        }
+                                        else
+                                                      {       ok=0;
+                                                printf("Id already exists. Try again\n");
+                                        }
+                                }
+                                printf("Account created successfully!\n");
+                                id = id_user; // this is needed for next options, to know which user we are working with
+                                break;
+
+                        }
+                        case 0:
+                        {
+                                printf("Exiting program \n");
+                                break;
+                        }
+                        default:
+                        {
+                                printf("Invalid option\n");
+                                exit(0);
+                        }
+                }
+
                 printf("1. Record new transaction \n");
                 printf("2. Calculate the account balance \n");
                 printf("3. Display a list of previous transactions \n");
                 printf("4. Generate financial report \n"); // = a summary of income and expenses for a specific period
-
+                printf("5. Create another banking account\n"); //if a user has a saving account, he can create credit account / vice versa
+                //find account id
                 printf("0. Exit \n");
                 printf("Enter one option: ");
                 scanf("%d", &option);
@@ -229,10 +705,35 @@ int main()
                 {
                         case 1:
                         {
-                                i++;
+                                int type,account,transaction=0,amount;
+                                //choose account type (saving/credit)
+                                printf("Choose account type: 1 = credit account, 2 = saving account ");
+                                                          scanf("%d",&type);
+                                int poz;
+                                poz = search_for_account(id,type);
+                                //search for account in struct, based on id_user and type
+                                //if it exists, continue; otherwise show message
+                                if (poz!=0)
+                                {
+                                        while(transaction != 1 && transaction != 2 && transaction !=3)
+                                        {
+                                                printf("Choose transaction type: 1 = deposit, 2 = withdraw, 3 = transfer ");
+                                                scanf("%d",&transaction);
+                                        }
+                                        account = get_id_account(poz);
+                                        printf("Choose transaction amount: ");
+                                        scanf("%d",&amount);
+                                        create_transaction(account,transaction,amount);
+                                }
+                                else
+                                {
+                                        printf("Account does not exist.");
+                                        exit(0);
+                                }
+                                /*i++;
                                 printf("Transaction %d: ",i);
                                 printf("\n");
-                                new_transaction(i);
+                                new_transaction(i);*/
                                 break;
                         }
                         case 2:
@@ -242,9 +743,9 @@ int main()
                                 printf("\n");
                                 break;
                         }
-                        case 3:
+case 3:
                         {
-                                display_transactions(i);
+                                //display_transactions(i); needs replacement
                                 break;
                         }
                         case 4:
@@ -279,7 +780,7 @@ int main()
                                 printf("\n");
                                 month_validation(i);
 
-                                printf("Day: ");
+ printf("Day: ");
                                 scanf("%d",&d2);
                                 printf("\n");
                                 day_validation(i);
@@ -298,6 +799,4 @@ int main()
                 }
         }while(option);
         return 0;
-}
-
-
+}                                 
