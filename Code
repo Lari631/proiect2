@@ -520,7 +520,6 @@ void deposit(int account,int amount) // function that deposits given amount of m
         a[i].sum = a[i].sum+amount;
         //append transaction to file
         //write_all_accounts_to_file // modify the file with new data for next transactions
-        //modify sum in struct si dupa cumva si in fisier (nasolic)
         number_of_transactions++;
 }
 void withdraw(int account,int amount) // function that withdraws given amount of money from given account
